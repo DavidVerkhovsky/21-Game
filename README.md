@@ -19,9 +19,3 @@ A simple command-line Blackjack game written in Java. This game follows traditio
 - **S** – Stay (end your turn)
 - **Y/N** – Play again prompt after each round
 
-## How to Run
-
-### 1. Clone or Download the Repository
-```bash
-git clone https://github.com/your-username/21-Game.git
-cd 21-Game
