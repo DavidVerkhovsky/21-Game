@@ -1,0 +1,193 @@
+import java.util.*;
+
+// Main class containing all game logic
+public class BlackjackGame {
+    // Card class
+    static class Card {
+        private String suit;
+        private String value;
+
+        public Card(String value, String suit) {
+            this.value = value;
+            this.suit = suit;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public String toString() {
+            return value + " of " + suit;
+        }
+    }
+
+    // Deck class
+    static class Deck {
+        private List<Card> cards;
+
+        public Deck() {
+            cards = new ArrayList<>();
+            String[] suits = {"Hearts", "Diamonds", "Clubs", "Spades"};
+            String[] values = {"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"};
+            for (String suit : suits) {
+                for (String value : values) {
+                    cards.add(new Card(value, suit));
+                }
+            }
+            shuffle();
+        }
+
+        public void shuffle() {
+            Collections.shuffle(cards);
+        }
+
+        public Card dealCard() {
+            if (cards.isEmpty()) {
+                throw new IllegalStateException("Deck is empty!");
+            }
+            return cards.remove(0);
+        }
+    }
+
+    // Player class
+    static class Player {
+        private String name;
+        private List<Card> hand;
+
+        public Player(String name) {
+            this.name = name;
+            this.hand = new ArrayList<>();
+        }
+
+        public void addCard(Card card) {
+            hand.add(card);
+        }
+
+        public void resetHand() {
+            hand.clear();
+        }
+
+        public int getHandTotal() {
+            int total = 0;
+            int aceCount = 0;
+
+            for (Card card : hand) {
+                String value = card.getValue();
+                if ("JQK".contains(value)) {
+                    total += 10;
+                } else if (value.equals("A")) {
+                    total += 11;
+                    aceCount++;
+                } else {
+                    total += Integer.parseInt(value);
+                }
+            }
+
+            while (total > 21 && aceCount > 0) {
+                total -= 10;
+                aceCount--;
+            }
+
+            return total;
+        }
+
+        public boolean isBusted() {
+            return getHandTotal() > 21;
+        }
+
+        public void showHand(boolean hideFirstCard) {
+            System.out.println(name + "'s Hand:");
+            for (int i = 0; i < hand.size(); i++) {
+                if (i == 0 && hideFirstCard) {
+                    System.out.println("[Hidden]");
+                } else {
+                    System.out.println(hand.get(i));
+                }
+            }
+
+            if (!hideFirstCard) {
+                System.out.println("Total: " + getHandTotal());
+            }
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    // Game logic
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Player player = new Player("Player");
+        Player dealer = new Player("Dealer");
+
+        while (true) {
+            Deck deck = new Deck();
+            player.resetHand();
+            dealer.resetHand();
+
+            player.addCard(deck.dealCard());
+            player.addCard(deck.dealCard());
+            dealer.addCard(deck.dealCard());
+            dealer.addCard(deck.dealCard());
+
+            System.out.println("\n--- New Round ---");
+            player.showHand(false);
+            dealer.showHand(true);
+
+            // Player turn
+            while (true) {
+                System.out.print("Choose: (H)it or (S)tay? ");
+                String input = scanner.nextLine().trim().toLowerCase();
+                if (input.equals("h")) {
+                    player.addCard(deck.dealCard());
+                    player.showHand(false);
+                    if (player.isBusted()) {
+                        System.out.println("You BUSTED! Dealer wins.");
+                        break;
+                    }
+                } else if (input.equals("s")) {
+                    break;
+                } else {
+                    System.out.println("Invalid input.");
+                }
+            }
+
+            if (!player.isBusted()) {
+                System.out.println("\nDealer's Turn:");
+                dealer.showHand(false);
+                while (dealer.getHandTotal() < 16) {
+                    System.out.println("Dealer hits...");
+                    dealer.addCard(deck.dealCard());
+                    dealer.showHand(false);
+                }
+
+                if (dealer.isBusted()) {
+                    System.out.println("Dealer BUSTED! You win!");
+                } else {
+                    int playerTotal = player.getHandTotal();
+                    int dealerTotal = dealer.getHandTotal();
+
+                    System.out.println("\n--- Result ---");
+                    System.out.println("Your total: " + playerTotal);
+                    System.out.println("Dealer total: " + dealerTotal);
+
+                    if (playerTotal > dealerTotal) {
+                        System.out.println("You win!");
+                    } else if (playerTotal < dealerTotal) {
+                        System.out.println("Dealer wins!");
+                    } else {
+                        System.out.println("It's a tie!");
+                    }
+                }
+            }
+
+            System.out.print("\nPlay again? (Y/N): ");
+            String again = scanner.nextLine().trim().toLowerCase();
+            if (!again.equals("y")) {
+                System.out.println("Thanks for playing!");
+                break;
+            }
+        }
+    }
+}
